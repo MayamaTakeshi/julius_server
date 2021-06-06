@@ -1,4 +1,14 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include <julius/juliuslib.h>
+
+int client = NULL;
 
 /* Callback to be called when start waiting speech input. */
 static void
@@ -104,7 +114,12 @@ output_result(Recog *recog, void *dummy)
 
       /* output word sequence like Julius */
       printf("sentence%d:", n+1);
-      for(i=0;i<seqnum;i++) printf(" %s", winfo->woutput[seq[i]]);
+      for(i=0;i<seqnum;i++) {
+         char *p = winfo->woutput[seq[i]];
+         printf(" %s", p);
+         write(client, p, strlen(p));
+         write(client, "\n", 1);
+      }
       printf("\n");
       /* LM entry sequence */
       printf("wseq%d:", n+1);
@@ -224,7 +239,7 @@ main(int argc, char *argv[])
 
   /* by default, all messages will be output to standard out */
   /* to disable output, uncomment below */
-  //jlog_set_output(NULL);
+  jlog_set_output(NULL);
 
   /* output log to a file */
   //FILE *fp; fp = fopen("log.txt", "w"); jlog_set_output(fp);
@@ -249,6 +264,32 @@ main(int argc, char *argv[])
     return -1;
   }
   
+  int sck, addrlen;
+  struct sockaddr_in this_addr, peer_addr;
+  pid_t child_pid;
+  unsigned short port = 10500;
+
+  addrlen = sizeof( struct sockaddr_in );
+  memset( &this_addr, 0, addrlen );
+  memset( &peer_addr, 0, addrlen );
+
+  this_addr.sin_port        = htons(port);
+  this_addr.sin_family      = AF_INET;
+  this_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+  sck = socket( AF_INET, SOCK_STREAM, IPPROTO_IP);
+  bind( sck, &this_addr, addrlen );
+
+  listen( sck, 5 );
+  printf("waiting connection\n");
+  client = accept( sck, &peer_addr, &addrlen );
+  close(0);
+
+  if( dup(client) != 0 ) {
+    perror("error duplicating socket for stdin/stdout/stderr");
+    exit(1);
+  }
+
   /* 2. create recognition instance according to the jconf */
   /* it loads models, setup final parameters, build lexicon
      and set up work area for recognition */
