@@ -1,0 +1,46 @@
+------------------------------------------------------------
+2021/06/06 takeshi:
+
+Test:
+
+$ cat /root/tmp/d.wav | ./julius_server -C ../../dictation-kit/main.jconf -C ../../dictation-kit/am-gmm.jconf -demo -input stdin -cutsilence
+... ABRIDGED ...
+Warning: strip: sample 257708-257731 has zero value, stripped
+Warning: strip: sample 257930-257947 has zero value, stripped
+Warning: strip: sample 259139-259154 has zero value, stripped
+STAT: 23800 samples (1.49 sec.)
+STAT: ### speech analysis (waveform -> MFCC)
+sentence1:  おはよう ござい ます 。
+wseq1: <s> おはよう+感動詞 ござい+動詞 ます+助動詞 </s>
+phseq1: silB | o h a y o: | g o z a i | m a s u | silE
+
+cmscore1: 0.845 0.815 0.926 0.862 1.000
+score1: -3815.580078 (AM: -3750.942383  LM: -64.637756)
+STAT: 23800 samples (1.49 sec.)
+STAT: ### speech analysis (waveform -> MFCC)
+sentence1:  おはよう ござい ます 。
+wseq1: <s> おはよう+感動詞 ござい+動詞 ます+助動詞 </s>
+phseq1: silB | o h a y o: | g o z a i | m a s u | silE
+
+cmscore1: 0.801 0.814 0.927 0.839 1.000
+score1: -3824.000000 (AM: -3759.362305  LM: -64.637756)
+STAT: 24800 samples (1.55 sec.)
+STAT: ### speech analysis (waveform -> MFCC)
+sentence1:  おはよう ござい ます 。
+wseq1: <s> おはよう+感動詞 ござい+動詞 ます+助動詞 </s>
+phseq1: silB | o h a y o: | g o z a i | m a s u | silE
+
+cmscore1: 0.821 0.814 0.925 0.837 1.000
+score1: -3954.950684 (AM: -3890.312988  LM: -64.637756)
+STAT: 24800 samples (1.55 sec.)
+STAT: ### speech analysis (waveform -> MFCC)
+sentence1:  おはよう ござい ます 。
+wseq1: <s> おはよう+感動詞 ござい+動詞 ます+助動詞 </s>
+phseq1: silB | o h a y o: | g o z a i | m a s u | silE
+
+cmscore1: 0.840 0.814 0.925 0.846 1.000
+score1: -3945.235107 (AM: -3880.597412  LM: -64.637756)
+STAT: 0 samples (0.00 sec.)
+<input rejected by short input>
+
+
