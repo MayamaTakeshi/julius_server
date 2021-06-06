@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include <signal.h>
+
 #include <julius/juliuslib.h>
 
 int client = NULL;
@@ -281,8 +283,23 @@ main(int argc, char *argv[])
   bind( sck, &this_addr, addrlen );
 
   listen( sck, 5 );
-  printf("waiting connection\n");
-  client = accept( sck, &peer_addr, &addrlen );
+
+  /* kernel should automatically reap the child */
+  signal(SIGCHLD, SIG_IGN);
+
+  printf("waiting connections\n");
+  while( -1 != (client = accept( sck, &peer_addr, &addrlen ) ) ) {
+    child_pid = fork();
+    if( child_pid < 0 ) {
+      perror("Error forking");
+      exit(1);   /* error */
+    }
+
+    if( child_pid == 0 ) {
+      break;
+    }
+  }
+
   close(0);
 
   if( dup(client) != 0 ) {
