@@ -273,7 +273,17 @@ main(int argc, char *argv[])
     fprintf(stderr, "Try '-setting' for built-in engine configuration.\n");
     return -1;
   }
-  
+ 
+
+  /* 2. create recognition instance according to the jconf */
+  /* it loads models, setup final parameters, build lexicon
+     and set up work area for recognition */
+  recog = j_create_instance_from_jconf(jconf);
+  if (recog == NULL) {
+    fprintf(stderr, "Error in startup\n");
+    return -1;
+  }
+ 
   int sck, addrlen;
   struct sockaddr_in this_addr, peer_addr;
   pid_t child_pid;
@@ -327,16 +337,6 @@ main(int argc, char *argv[])
   }
 
   atexit(exited);
-
-
-  /* 2. create recognition instance according to the jconf */
-  /* it loads models, setup final parameters, build lexicon
-     and set up work area for recognition */
-  recog = j_create_instance_from_jconf(jconf);
-  if (recog == NULL) {
-    fprintf(stderr, "Error in startup\n");
-    return -1;
-  }
 
   /*********************/
   /* Register callback */
