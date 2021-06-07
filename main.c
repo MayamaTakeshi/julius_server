@@ -7,10 +7,16 @@
 #include <sys/socket.h>
 
 #include <signal.h>
+#include <stdlib.h>
 
 #include <julius/juliuslib.h>
 
 int client = NULL;
+
+void exited() {
+  printf("exited\n");
+  close(client);
+}
 
 /* Callback to be called when start waiting speech input. */
 static void
@@ -93,12 +99,15 @@ output_result(Recog *recog, void *dummy)
 	break;
       case J_RESULT_STATUS_REJECT_SHORT:
 	printf("<input rejected by short input>\n");
+	write(client, "END", 3);
 	break;
       case J_RESULT_STATUS_REJECT_LONG:
 	printf("<input rejected by long input>\n");
+	write(client, "END", 3);
 	break;
       case J_RESULT_STATUS_FAIL:
 	printf("<search failed>\n");
+	write(client, "END", 3);
 	break;
       }
       /* continue to next process instance */
@@ -211,7 +220,6 @@ output_result(Recog *recog, void *dummy)
   fflush(stdout);
 }
 
-
 /**
  * Main function
  * 
@@ -306,6 +314,20 @@ main(int argc, char *argv[])
     perror("error duplicating socket for stdin/stdout/stderr");
     exit(1);
   }
+
+  int optval;
+  socklen_t optlen = sizeof(optval);
+
+  optval = 1;
+  optlen = sizeof(optval);
+  if(setsockopt(client, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) < 0) {
+    perror("setsockopt()");
+    close(client);
+    exit(EXIT_FAILURE);
+  }
+
+  atexit(exited);
+
 
   /* 2. create recognition instance according to the jconf */
   /* it loads models, setup final parameters, build lexicon

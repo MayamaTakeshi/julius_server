@@ -3,30 +3,37 @@ var fs = require('fs');
 
 var HOST = '192.168.225.131';
 
-var client1 = new net.Socket();
+var client = new net.Socket();
 
-client1.on('error', function (e) {
-  console.log("client1 ERROR: "+e.code);
-});
+client.on('end', function() {
+  console.log("client end")
+})
 
-client1.on('data', function(data) {
-    console.log(`client1 data: ${data}`)  
-});
+client.on('error', function (e) {
+  console.log(`client error: ${e.code}`);
+})
 
-client1.on('close', function() {
-    console.log(`client1 closed`);
-});
+client.on('data', function(data) {
+  console.log(`client data: ${data}`)  
+  if(data.includes("END")) {
+    process.exit(0)
+  }
+})
 
-client1.connect(10500, HOST, function() {
-  console.log('client1 connected to server: ' + HOST + ':' + 10500);
+client.on('close', function() {
+    console.log(`client closed`);
+})
+
+client.connect(10500, HOST, function() {
+  console.log('client connected to server: ' + HOST + ':' + 10500);
 
   // raw file must be big endian encoded as signed-integer
   var wav_file = "../artifacts/ohayou_gozaimasu.4times.raw"
 
   const file = fs.createReadStream(wav_file)
 
-  file.pipe(client1)
-});
+  file.pipe(client)
+})
 
 
 
