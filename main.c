@@ -99,15 +99,15 @@ output_result(Recog *recog, void *dummy)
 	break;
       case J_RESULT_STATUS_REJECT_SHORT:
 	printf("<input rejected by short input>\n");
-	write(client, "END", 3);
+	write(client, "+END\n", 4);
 	break;
       case J_RESULT_STATUS_REJECT_LONG:
 	printf("<input rejected by long input>\n");
-	write(client, "END", 3);
+	write(client, "+END\n", 4);
 	break;
       case J_RESULT_STATUS_FAIL:
 	printf("<search failed>\n");
-	write(client, "END", 3);
+	write(client, "+END\n", 4);
 	break;
       }
       /* continue to next process instance */
@@ -118,19 +118,22 @@ output_result(Recog *recog, void *dummy)
     winfo = r->lm->winfo;
 
     for(n = 0; n < r->result.sentnum; n++) { /* for all sentences */
-
       s = &(r->result.sent[n]);
       seq = s->word;
       seqnum = s->word_num;
 
       /* output word sequence like Julius */
       printf("sentence%d:", n+1);
+
+      write(client, "+RESULT=", 8);
+
       for(i=0;i<seqnum;i++) {
          char *p = winfo->woutput[seq[i]];
          printf(" %s", p);
          write(client, p, strlen(p));
-         write(client, "\n", 1);
       }
+      write(client, "\n", 1);
+
       printf("\n");
       /* LM entry sequence */
       printf("wseq%d:", n+1);
