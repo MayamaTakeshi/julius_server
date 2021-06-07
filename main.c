@@ -23,11 +23,38 @@ int start_notified = 0;
 static void
 speech_start(Recog *recog, void *dummy)
 {
+  printf("speech_start\n");
   if(!start_notified) {
     write(client, "+SPEECH_START\n", 14); 
     start_notified = 1;
   }
 }
+
+static void
+speech_ready(Recog *recog, void *dummy)
+{
+  printf("speech_ready\n");
+}
+
+static void
+speech_stop(Recog *recog, void *dummy)
+{
+  printf("speech_stop\n");
+}
+
+static void
+recognition_begin(Recog *recog, void *dummy)
+{
+  printf("recognition_begin\n");
+}
+
+static void
+recognition_end(Recog *recog, void *dummy)
+{
+  printf("recognition_end\n");
+}
+
+
 
 /* Sub function to output phoneme sequence. */
 static void
@@ -337,7 +364,11 @@ main(int argc, char *argv[])
   /*********************/
   /* register result callback functions */
   callback_add(recog, CALLBACK_EVENT_PROCESS_ONLINE, process_online, NULL);
+  callback_add(recog, CALLBACK_EVENT_SPEECH_READY, speech_ready, NULL);
   callback_add(recog, CALLBACK_EVENT_SPEECH_START, speech_start, NULL);
+  callback_add(recog, CALLBACK_EVENT_SPEECH_STOP, speech_stop, NULL);
+  callback_add(recog, CALLBACK_EVENT_RECOGNITION_BEGIN, recognition_begin, NULL);
+  callback_add(recog, CALLBACK_EVENT_RECOGNITION_END, recognition_end, NULL);
   callback_add(recog, CALLBACK_RESULT, output_result, NULL);
 
   /**************************/
