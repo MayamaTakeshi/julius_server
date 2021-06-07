@@ -14,7 +14,7 @@ client.on('error', function (e) {
 })
 
 client.on('data', function(data) {
-  console.log(`client data: ${data}`)  
+  console.log(`${new Date()} client data: ${data}`)
   if(data.includes("END")) {
     process.exit(0)
   }

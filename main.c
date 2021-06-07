@@ -16,7 +16,17 @@ int client = NULL;
 static void
 process_online(Recog *recog, void *dummy)
 {
-  write(client, "+START\n", 7); 
+  write(client, "+READY\n", 7); 
+}
+
+int start_notified = 0;
+static void
+speech_start(Recog *recog, void *dummy)
+{
+  if(!start_notified) {
+    write(client, "+SPEECH_START\n", 14); 
+    start_notified = 1;
+  }
 }
 
 /* Sub function to output phoneme sequence. */
@@ -327,6 +337,7 @@ main(int argc, char *argv[])
   /*********************/
   /* register result callback functions */
   callback_add(recog, CALLBACK_EVENT_PROCESS_ONLINE, process_online, NULL);
+  callback_add(recog, CALLBACK_EVENT_SPEECH_START, speech_start, NULL);
   callback_add(recog, CALLBACK_RESULT, output_result, NULL);
 
   /**************************/
