@@ -265,4 +265,12 @@ client1 data:
 
 client1 closed
 
+------------------------------------------------------------
+2021/06/07 takeshi:
+
+We will not use 
+  CALLBACK_EVENT_SPEECH_READY
+  CALLBACK_EVENT_SPEECH_START
+  CALLBACK_EVENT_SPEECH_STOP
+because these will be called each time the engine detects start/end of speech.
 

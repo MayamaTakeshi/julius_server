@@ -13,27 +13,10 @@
 
 int client = NULL;
 
-void exited() {
-  printf("exited\n");
-  close(client);
-}
-
-/* Callback to be called when start waiting speech input. */
 static void
-status_recready(Recog *recog, void *dummy)
+process_online(Recog *recog, void *dummy)
 {
-  if (recog->jconf->input.speech_input == SP_MIC || recog->jconf->input.speech_input == SP_NETAUDIO) {
-    fprintf(stderr, "<<< please speak >>>");
-  }
-}
-
-/* Callback to be called when speech input is triggered. */
-static void
-status_recstart(Recog *recog, void *dummy)
-{
-  if (recog->jconf->input.speech_input == SP_MIC || recog->jconf->input.speech_input == SP_NETAUDIO) {
-    fprintf(stderr, "\r                    \r");
-  }
+  write(client, "+START\n", 7); 
 }
 
 /* Sub function to output phoneme sequence. */
@@ -54,7 +37,7 @@ put_hypo_phoneme(WORD_ID *seq, int n, WORD_INFO *winfo)
       }
     }
   }
-  printf("\n");  
+  printf("\n"); 
 }
 
 /* Callback to output final recognition result.*/
@@ -125,7 +108,7 @@ output_result(Recog *recog, void *dummy)
       /* output word sequence like Julius */
       printf("sentence%d:", n+1);
 
-      write(client, "+RESULT=", 8);
+      write(client, "+RESULT:", 8);
 
       for(i=0;i<seqnum;i++) {
          char *p = winfo->woutput[seq[i]];
@@ -339,14 +322,11 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  atexit(exited);
-
   /*********************/
   /* Register callback */
   /*********************/
   /* register result callback functions */
-  callback_add(recog, CALLBACK_EVENT_SPEECH_READY, status_recready, NULL);
-  callback_add(recog, CALLBACK_EVENT_SPEECH_START, status_recstart, NULL);
+  callback_add(recog, CALLBACK_EVENT_PROCESS_ONLINE, process_online, NULL);
   callback_add(recog, CALLBACK_RESULT, output_result, NULL);
 
   /**************************/
