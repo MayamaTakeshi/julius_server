@@ -5,7 +5,7 @@ var HOST = '192.168.225.131';
 
 var client = new net.Socket();
 
-const BUFFER_SIZE = 50000
+const BUFFER_SIZE = 1600
 
 client.on('end', function() {
     console.log("client end")
