@@ -396,4 +396,129 @@ Maybe this is because we are replacing STDIN with a socket and using '-input std
 So we will need to undo this and try force julius to read from the socket we got when forking.
 
 
+------------------------------------------------------------
+2021/06/07 takeshi:
+
+Doing a test with stock julius:
+[root@lab225131-basix-ban dictation-kit]$ cat /usr/local/src/git/MayamaTakeshi/julius_server/tests/artifacts/ohayou_gozaimasu.4times.wav | ./run-linux-gmm.iotbzh-julius.sh -input stdin -cutsilence 
+... ABRIDGED ...
+Warning: strip: sample 257708-257731 has zero value, stripped
+Warning: strip: sample 257930-257947 has zero value, stripped
+Warning: strip: sample 259139-259154 has zero value, stripped
+STAT: 23800 samples (1.49 sec.)
+STAT: ### speech analysis (waveform -> MFCC)
+pass1_best:  おはよう ござい ま           
+sentence1:  おはよう ござい ます 。
+STAT: 23800 samples (1.49 sec.)
+STAT: ### speech analysis (waveform -> MFCC)
+pass1_best:  おはよう ござい ま           
+sentence1:  おはよう ござい ます 。
+STAT: 24800 samples (1.55 sec.)
+STAT: ### speech analysis (waveform -> MFCC)
+pass1_best:  おはよう ござい ます 。           
+sentence1:  おはよう ござい ます 。
+STAT: 24800 samples (1.55 sec.)
+STAT: ### speech analysis (waveform -> MFCC)
+pass1_best:  おはよう ござい ます 。           
+sentence1:  おはよう ござい ます 。
+STAT: 0 samples (0.00 sec.)
+<input rejected by short input>
+
+Error: adin_stdin: stdin reached EOF
+reached end of input on stdin
+
+
+It looks indeed in case of stdin, julius wants to get all the data before processing.
+However, since it offers '-input mic' I assume partial recognition should be possible.
+
+------------------------------------------------------------
+2021/06/08 takeshi:
+
+Testing with original julius with adinnet, we see something wrong:
+
+
+$ node send_wav_by_chunks.js 
+
+The above script would send ohayou gozaimasu 4 times.
+But this is julius output:
+
+[dictation-kit]$ ./run-linux-gmm.sh -input adinnet -cutsilence 
+...ABRIDGED...
+Warning: strip: sample 63631-63646 has zero value, stripped
+pass1_best:  おはよう ござい ま
+sentence1:  おはよう ござい ます 。
+pass1_best:  おはよう ござい ま
+sentence1:  おはよう ござい ます 。
+STAT: no input frame
+
+STAT: no input frame
+
+STAT: no input frame
+
+STAT: no input frame
+
+STAT: no input frame
+
+Error: rdwt: transfer data length exceeded: -1079622276 (>640000)
+STAT: no input frame
+Stat: adin_tcpip: connection end
+
+Stat: adin_tcpip: waiting connection...
+
+
+Notice that we only see sentence1 two times (so julius didn't get the two last ones).
+It seems this hapens because of the rdwt error.
+
+
+However, if we test with aditool, this problem doesn't happen:
+
+[root@lab225131-basix-ban dictation-kit]$ bin/linux/adintool -in file -out adinnet -server 192.168.225.131
+----------------------------------------                     
+INPUT                                                        
+           InputType: waveform                               
+         InputSource: waveform file                          
+        Segmentation: on, continuous                         
+          SampleRate: 16000 Hz                               
+               Level: 2000 / 32767                           
+           ZeroCross: 60 per sec.                            
+          HeadMargin: 300 msec.                              
+          TailMargin: 400 msec.                              
+          ZeroFrames: drop                                   
+           DCRemoval: off                                    
+           Auto`ause: off                                    
+           LooseSync: off                                    
+              Rewind: no                                     
+OUTPUT                                                             
+          OutputType: waveform                               
+            OutputTo: adinnet server                               
+              SendTo: (192.168.225.131:5530)                 
+----------------------------------------                           
+STAT: ###### initialize input device                         
+connecting to #1 (192.168.225.131:5530)...connected                
+[start recording]                                            
+enter filename->/usr/local/src/git/MayamaTakeshi/julius_server/tests/artifacts/ohayou_gozaimasu.4times.wav
+
+
+
+[root@lab225131-basix-ban dictation-kit]$ ./run-linux-gmm.sh -input adinnet -cutsilence 
+... ABRIDGED ...
+Stat: adin_tcpip: waiting connection...
+Stat: server-client: connect from 192.168.225.131
+Stat: adin_tcpip: connected
+pass1_best:  おはよう ござい ま
+sentence1:  おはよう ござい ます 。
+
+pass1_best:  おはよう ござい ま
+sentence1:  おはよう ござい ます 。
+
+pass1_best:  おはよう ござい ま
+sentence1:  おはよう ござい ます 。
+
+pass1_best:  おはよう ござい ま
+sentence1:  おはよう ござい ます 。
+
+jSTAT: no input frame
+Stat: adin_tcpip: connection end
+
+Stat: adin_tcpip: waiting connection...
 

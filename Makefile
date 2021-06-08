@@ -23,9 +23,14 @@ all: julius_server
 julius_server: main.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o julius_server main.c $(LDFLAGS)
 
+myplugin.jpi: myplugin.c
+	gcc -shared -o myplugin.jpi myplugin.c -I ../../julius/plugin/
+
 clean:
 	$(RM) *.o *.bak *~ core TAGS
 
 distclean:
 	$(RM) *.o *.bak *~ core TAGS
 	$(RM) julius_server
+
+

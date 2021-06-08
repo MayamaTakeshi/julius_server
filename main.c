@@ -69,8 +69,8 @@ put_hypo_phoneme(WORD_ID *seq, int n, WORD_INFO *winfo)
       if (i > 0) printf(" |");
       w = seq[i];
       for (j=0;j<winfo->wlen[w];j++) {
-	center_name(winfo->wseq[w][j]->name, buf);
-	printf(" %s", buf);
+    center_name(winfo->wseq[w][j]->name, buf);
+    printf(" %s", buf);
       }
     }
   }
@@ -106,29 +106,29 @@ output_result(Recog *recog, void *dummy)
       /* outout message according to the status code */
       switch(r->result.status) {
       case J_RESULT_STATUS_REJECT_POWER:
-	printf("<input rejected by power>\n");
-	break;
+    printf("<input rejected by power>\n");
+    break;
       case J_RESULT_STATUS_TERMINATE:
-	printf("<input teminated by request>\n");
-	break;
+    printf("<input teminated by request>\n");
+    break;
       case J_RESULT_STATUS_ONLY_SILENCE:
-	printf("<input rejected by decoder (silence input result)>\n");
-	break;
+    printf("<input rejected by decoder (silence input result)>\n");
+    break;
       case J_RESULT_STATUS_REJECT_GMM:
-	printf("<input rejected by GMM>\n");
-	break;
+    printf("<input rejected by GMM>\n");
+    break;
       case J_RESULT_STATUS_REJECT_SHORT:
-	printf("<input rejected by short input>\n");
-	write(client, "+END\n", 4);
-	break;
+    printf("<input rejected by short input>\n");
+    write(client, "+END\n", 4);
+    break;
       case J_RESULT_STATUS_REJECT_LONG:
-	printf("<input rejected by long input>\n");
-	write(client, "+END\n", 4);
-	break;
+    printf("<input rejected by long input>\n");
+    write(client, "+END\n", 4);
+    break;
       case J_RESULT_STATUS_FAIL:
-	printf("<search failed>\n");
-	write(client, "+END\n", 4);
-	break;
+    printf("<search failed>\n");
+    write(client, "+END\n", 4);
+    break;
       }
       /* continue to next process instance */
       continue;
@@ -170,71 +170,71 @@ output_result(Recog *recog, void *dummy)
       /* AM and LM scores */
       printf("score%d: %f", n+1, s->score);
       if (r->lmtype == LM_PROB) { /* if this process uses N-gram */
-	printf(" (AM: %f  LM: %f)", s->score_am, s->score_lm);
+    printf(" (AM: %f  LM: %f)", s->score_am, s->score_lm);
       }
       printf("\n");
       if (r->lmtype == LM_DFA) { /* if this process uses DFA grammar */
-	/* output which grammar the hypothesis belongs to
-	   when using multiple grammars */
-	if (multigram_get_all_num(r->lm) > 1) {
-	  printf("grammar%d: %d\n", n+1, s->gram_id);
-	}
+    /* output which grammar the hypothesis belongs to
+       when using multiple grammars */
+    if (multigram_get_all_num(r->lm) > 1) {
+      printf("grammar%d: %d\n", n+1, s->gram_id);
+    }
       }
       
       /* output alignment result if exist */
       for (align = s->align; align; align = align->next) {
-	printf("=== begin forced alignment ===\n");
-	switch(align->unittype) {
-	case PER_WORD:
-	  printf("-- word alignment --\n"); break;
-	case PER_PHONEME:
-	  printf("-- phoneme alignment --\n"); break;
-	case PER_STATE:
-	  printf("-- state alignment --\n"); break;
-	}
-	printf(" id: from  to    n_score    unit\n");
-	printf(" ----------------------------------------\n");
-	for(i=0;i<align->num;i++) {
-	  printf("[%4d %4d]  %f  ", align->begin_frame[i], align->end_frame[i], align->avgscore[i]);
-	  switch(align->unittype) {
-	  case PER_WORD:
-	    printf("%s\t[%s]\n", winfo->wname[align->w[i]], winfo->woutput[align->w[i]]);
-	    break;
-	  case PER_PHONEME:
-	    p = align->ph[i];
-	    if (p->is_pseudo) {
-	      printf("{%s}\n", p->name);
-	    } else if (strmatch(p->name, p->body.defined->name)) {
-	      printf("%s\n", p->name);
-	    } else {
-	      printf("%s[%s]\n", p->name, p->body.defined->name);
-	    }
-	    break;
-	  case PER_STATE:
-	    p = align->ph[i];
-	    if (p->is_pseudo) {
-	      printf("{%s}", p->name);
-	    } else if (strmatch(p->name, p->body.defined->name)) {
-	      printf("%s", p->name);
-	    } else {
-	      printf("%s[%s]", p->name, p->body.defined->name);
-	    }
-	    if (r->am->hmminfo->multipath) {
-	      if (align->is_iwsp[i]) {
-		printf(" #%d (sp)\n", align->loc[i]);
-	      } else {
-		printf(" #%d\n", align->loc[i]);
-	      }
-	    } else {
-	      printf(" #%d\n", align->loc[i]);
-	    }
-	    break;
-	  }
-	}
-	
-	printf("re-computed AM score: %f\n", align->allscore);
+    printf("=== begin forced alignment ===\n");
+    switch(align->unittype) {
+    case PER_WORD:
+      printf("-- word alignment --\n"); break;
+    case PER_PHONEME:
+      printf("-- phoneme alignment --\n"); break;
+    case PER_STATE:
+      printf("-- state alignment --\n"); break;
+    }
+    printf(" id: from  to    n_score    unit\n");
+    printf(" ----------------------------------------\n");
+    for(i=0;i<align->num;i++) {
+      printf("[%4d %4d]  %f  ", align->begin_frame[i], align->end_frame[i], align->avgscore[i]);
+      switch(align->unittype) {
+      case PER_WORD:
+        printf("%s  [%s]\n", winfo->wname[align->w[i]], winfo->woutput[align->w[i]]);
+        break;
+      case PER_PHONEME:
+        p = align->ph[i];
+        if (p->is_pseudo) {
+          printf("{%s}\n", p->name);
+        } else if (strmatch(p->name, p->body.defined->name)) {
+          printf("%s\n", p->name);
+        } else {
+          printf("%s[%s]\n", p->name, p->body.defined->name);
+        }
+        break;
+      case PER_STATE:
+        p = align->ph[i];
+        if (p->is_pseudo) {
+          printf("{%s}", p->name);
+        } else if (strmatch(p->name, p->body.defined->name)) {
+          printf("%s", p->name);
+        } else {
+          printf("%s[%s]", p->name, p->body.defined->name);
+        }
+        if (r->am->hmminfo->multipath) {
+          if (align->is_iwsp[i]) {
+        printf(" #%d (sp)\n", align->loc[i]);
+          } else {
+        printf(" #%d\n", align->loc[i]);
+          }
+        } else {
+          printf(" #%d\n", align->loc[i]);
+        }
+        break;
+      }
+    }
+    
+    printf("re-computed AM score: %f\n", align->allscore);
 
-	printf("=== end forced alignment ===\n");
+    printf("=== end forced alignment ===\n");
       }
     }
   }
@@ -292,7 +292,7 @@ main(int argc, char *argv[])
   jconf = j_config_load_args_new(argc, argv);
   /* else, you can load configurations from a jconf file */
   //jconf = j_config_load_file_new(jconf_filename);
-  if (jconf == NULL) {		/* error */
+  if (jconf == NULL) {      /* error */
     fprintf(stderr, "Try '-setting' for built-in engine configuration.\n");
     return -1;
   }
@@ -330,6 +330,7 @@ main(int argc, char *argv[])
 
   printf("waiting connections\n");
   while( -1 != (client = accept( sck, &peer_addr, &addrlen ) ) ) {
+    printf("accepted connection\n");
     child_pid = fork();
     if( child_pid < 0 ) {
       perror("Error forking");
@@ -395,17 +396,17 @@ main(int argc, char *argv[])
       /* open the input file */
       ret = j_open_stream(recog, speechfilename);
       switch(ret) {
-      case 0:			/* succeeded */
-	break;
-      case -1:      		/* error */
-	/* go on to the next input */
-	continue;
-      case -2:			/* end of recognition */
-	return;
+      case 0:           /* succeeded */
+    break;
+      case -1:              /* error */
+    /* go on to the next input */
+    continue;
+      case -2:          /* end of recognition */
+    return;
       }
       /* recognition loop */
       ret = j_recognize_stream(recog);
-      if (ret == -1) return -1;	/* error */
+      if (ret == -1) return -1; /* error */
       /* reach here when an input ends */
     }
 
@@ -413,12 +414,12 @@ main(int argc, char *argv[])
     /* raw speech input (microphone etc.) */
 
     switch(j_open_stream(recog, NULL)) {
-    case 0:			/* succeeded */
+    case 0:         /* succeeded */
       break;
-    case -1:      		/* error */
+    case -1:            /* error */
       fprintf(stderr, "error in input stream\n");
       return;
-    case -2:			/* end of recognition process */
+    case -2:            /* end of recognition process */
       fprintf(stderr, "failed to begin input stream\n");
       return;
     }
@@ -429,7 +430,7 @@ main(int argc, char *argv[])
     /* enter main loop to recognize the input stream */
     /* finish after whole input has been processed and input reaches end */
     ret = j_recognize_stream(recog);
-    if (ret == -1) return -1;	/* error */
+    if (ret == -1) return -1;   /* error */
     
     /*******/
     /* End */
