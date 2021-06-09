@@ -18,13 +18,13 @@ LDFLAGS= -L$(LIBJULIUS) `$(LIBJULIUS)/libjulius-config --libs` -L$(LIBSENT) `$(L
 
 ############################################################
 
-all: julius_server
+all: julius_server fullduplex_plugin.jpi
 
 julius_server: main.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o julius_server main.c $(LDFLAGS)
 
-myplugin.jpi: myplugin.c
-	gcc -shared -o myplugin.jpi myplugin.c -I ../../julius/plugin/
+fullduplex_plugin.jpi: fullduplex_plugin.c
+	gcc -shared -o fullduplex_plugin.jpi fullduplex_plugin.c -I ../../julius/plugin/
 
 clean:
 	$(RM) *.o *.bak *~ core TAGS
@@ -32,5 +32,6 @@ clean:
 distclean:
 	$(RM) *.o *.bak *~ core TAGS
 	$(RM) julius_server
+
 
 

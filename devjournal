@@ -522,3 +522,93 @@ Stat: adin_tcpip: connection end
 
 Stat: adin_tcpip: waiting connection...
 
+
+UPDATE:
+While checking TCP audio samples transmission using tcpdump I realized it was not sending all the data in the capture (probably it was removing silence etc).
+It seems the correct way to use it is:
+
+$ bin/linux/adintool -in file -out adinnet -server 192.168.225.131 -nostrip -nosegment
+
+which caused this output:
+
+[root@lab225131-basix-ban dictation-kit]$ ./run-linux-gmm.iotbzh-julius.sh -input adinnet -cutsilence -nostrip
+... ABRIDGED ...
+Stat: adin_tcpip: waiting connection...
+Stat: server-client: connect from 192.168.225.131
+Stat: adin_tcpip: connected
+pass1_best:  おはよう ござい ま
+sentence1:  おはよう ござい ます 。
+pass1_best:  おはよう ござい ま
+sentence1:  おはよう ござい ます 。
+pass1_best:  おはよう ござい ます 。
+sentence1:  おはよう ござい ます 。
+pass1_best:  おはよう ござい ます 。
+sentence1:  おはよう ござい ます 。
+STAT: no input frame
+
+STAT: no input frame
+Stat: adin_tcpip: connection end
+
+Stat: adin_tcpip: waiting connection...
+
+which is more like the one we got using our node.js script.
+
+
+UPDATE:
+Solved. See: https://github.com/julius-speech/julius/issues/30#issuecomment-856461359
+
+------------------------------------------------------------
+2021/06/08 takeshi:
+
+Explanation about how julius read sample data:
+http://quruli.ivory.ne.jp/document/julius_4.2/adin__oss_8c.html#a6176085ebff799202e3fd917ce4db42d
+
+Also in m_adin.c we see:
+
+#ifdef ENABLE_PLUGIN
+  sid = jconf->input.plugin_source;
+  if (sid >= 0) {
+    /* set plugin properties and functions to adin */
+    func = (FUNC_INT) plugin_get_func(sid, "adin_get_configuration");
+    if (func == NULL) {
+      jlog("ERROR: invalid plugin: adin_get_configuration() not exist\n");
+      return FALSE;
+    }
+    adin->silence_cut_default = (*func)(1);
+    adin->enable_thread = (*func)(2);
+
+    adin->ad_standby       = (boolean (*)(int, void *)) plugin_get_func(sid, "adin_standby");
+    adin->ad_begin     = (boolean (*)(char *)) plugin_get_func(sid, "adin_open");
+    adin->ad_end       = (boolean (*)()) plugin_get_func(sid, "adin_close");
+    adin->ad_resume        = (boolean (*)()) plugin_get_func(sid, "adin_resume");
+    adin->ad_pause     = (boolean (*)()) plugin_get_func(sid, "adin_pause");
+    adin->ad_terminate     = (boolean (*)()) plugin_get_func(sid, "adin_terminate");
+    adin->ad_read      = (int (*)(SP16 *, int)) plugin_get_func(sid, "adin_read");
+    adin->ad_input_name    = (char * (*)()) plugin_get_func(sid, "adin_input_name");
+    if (adin->ad_read == NULL) {
+      jlog("ERROR: m_adin: selected plugin has no function adin_read()\n");
+      return FALSE;
+    }
+  } else {
+#endif
+
+So we could wire a function in the plugin to do the reading.
+
+------------------------------------------------------------
+2021/06/09 takeshi:
+
+Tests show that we cannot use '-input stdin' as we originally planned. 
+The problem is that using this input mode, julius wait to fetch all data before it process it.
+So we must use a real socket (adinnet or custom socket plugin).
+
+Then the possible alternatives are:
+  1) implement a plugin to permit to fetch data from the accepted socket (single fullduplex socket)
+or
+  2) use '-adport 0' and let the OS select a free port for the client to connect to send the audio (2 sockets one for -module and another for -adinnet)
+
+UPDATE:
+we implemented alternative 1 (fullduplex_plugin).
+We start the server like this:
+  ./julius_server -C ../../dictation-kit/main.jconf -C ../../dictation-kit/am-gmm.jconf -plugindir . -input fullduplex -cutsilence -nostrip
+
+

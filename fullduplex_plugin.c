@@ -15,10 +15,10 @@
 int
 get_plugin_info (int opcode, char * buf, int buflen)
 {
-  printf("get_plugin_info for duplex-socket\n");
+  //printf("get_plugin_info for fullduplex\n");
   switch (opcode) {
   case 0:
-    strncpy (buf, "duplex-socket", buflen);
+    strncpy (buf, "fullduplex", buflen);
     break;
   }
   return 0;
@@ -27,14 +27,14 @@ get_plugin_info (int opcode, char * buf, int buflen)
 void
 adin_get_optname (char * buf, int buflen)
 {
-  printf("adin_get_optname for duplex-socket\n");
-  strncpy (buf, "duplex-socket", buflen);
+  //printf("adin_get_optname for fullduplex\n");
+  strncpy (buf, "fullduplex", buflen);
 }
 
 int
 adin_get_configuration (int opcode)
 {
-  printf("adin_get_configuration for duplex-socket\n");
+  //printf("adin_get_configuration for fullduplex\n");
   switch (opcode) {
   case 0: /* enable real-time processing of 1st pass by default? */
     return 1; /* yes */
@@ -48,44 +48,38 @@ adin_get_configuration (int opcode)
 boolean
 adin_standby (int sfreq, void * dummy)
 {
-  printf("adin_standby for duplex-socket\n");
+  //printf("adin_standby for fullduplex\n");
   return TRUE;
 }
 
 boolean
 adin_open (char * pathname)
 {
-  printf("adin_open for duplex-socket\n");
-  //fcntl(0, F_SETFL, O_NONBLOCK);
+  //printf("adin_open for fullduplex\n");
   return TRUE;
 }
 
 int
 adin_read (SP16 * buf, int sampnum)
 {
-  //printf("adin_read for duplex-socket\n");
-  int cnt = read(0, buf, sampnum);
+  //printf("adin_read for fullduplex\n");
+  int cnt = read(0, buf, sampnum * 2); // each sample is 2 bytes
   if (cnt <0) {
     printf("Error: failed to read samples errno=%i\n", errno);
     perror("");
     return(ADIN_ERROR);
   }
 
-  return cnt;
-
-  if(cnt > 0) return cnt;
-
-  for(int i=0; i<4096; i++) {
-    buf[i] = 0x00;
-  }
   //printf("cnt=%i\n", cnt);
-  return 4096;
+  if(cnt == 0) return ADIN_EOF;
+
+  return cnt/2;
 }
 
 boolean
 adin_close ()
 {
-  printf("adin_close for duplex-socket\n");
+  //printf("adin_close for fullduplex\n");
   close(0);
   return TRUE;
 }

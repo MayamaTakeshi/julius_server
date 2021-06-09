@@ -5,7 +5,7 @@ var HOST = '192.168.225.131';
 
 var client = new net.Socket();
 
-const BUFFER_SIZE = 1600
+const BUFFER_SIZE = 320
 
 client.on('end', function() {
     console.log("client end")
@@ -44,29 +44,24 @@ client.connect(10500, HOST, function() {
             } else if(bytesRead == 0) {
                 console.log("No more data from file.")
                 clearInterval(tid)
+                setTimeout(() => {
+                    console.log("Terminating")
+                    process.exit(0)
+                }, 1000)
 
-                // need to close our side of the socket to end read() call at the server.
-                client.end()
+            } else {
+                //console.log(`Fetched ${bytesRead} bytes from audio_file.`)
 
-                /*
-                console.log("Sending silence from now on")
-                for(i=0 ;i<BUFFER_SIZE; i++) {
-                    buffer[i] = 0x00
+                for(var i=0 ;i<data.length/2 ; i++) {
+                    var temp = data[i*2]
+                    data[i*2] = data[i*2+1]
+                    data[i*2+1] = temp
                 }
 
-                tid = setInterval(() => {
-                    client.write(buffer)
-                }, 20)
-                */
-            } else {
-                console.log(`Fetched ${bytesRead} bytes from audio_file.`)
-                client.write(buffer)
+                client.write(data)
             }
         })
     }, 20)
 })
-
-
-
 
 

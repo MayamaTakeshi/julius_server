@@ -16,30 +16,28 @@ int client = NULL;
 static void
 process_online(Recog *recog, void *dummy)
 {
-  write(client, "+READY\n", 7); 
+  //write(client, "+READY\n", 7); 
 }
 
-int start_notified = 0;
 static void
 speech_start(Recog *recog, void *dummy)
 {
   printf("speech_start\n");
-  if(!start_notified) {
-    write(client, "+SPEECH_START\n", 14); 
-    start_notified = 1;
-  }
+  write(client, "+SPEECH_START\n", 14); 
 }
 
 static void
 speech_ready(Recog *recog, void *dummy)
 {
   printf("speech_ready\n");
+  write(client, "+SPEECH_READY\n", 14); 
 }
 
 static void
 speech_stop(Recog *recog, void *dummy)
 {
   printf("speech_stop\n");
+  write(client, "+SPEECH_STOP\n", 13); 
 }
 
 static void
@@ -345,7 +343,7 @@ main(int argc, char *argv[])
   close(0);
 
   if( dup(client) != 0 ) {
-    perror("error duplicating socket for stdin/stdout/stderr");
+    perror("error duplicating socket for stdin");
     exit(1);
   }
 
