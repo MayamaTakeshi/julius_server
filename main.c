@@ -330,6 +330,9 @@ main(int argc, char *argv[])
     return -1;
   }
  
+  /* kernel should automatically reap the child */
+  signal(SIGCHLD, SIG_IGN);
+
   int sck, addrlen;
   struct sockaddr_in this_addr, peer_addr;
   pid_t child_pid;
@@ -346,6 +349,22 @@ main(int argc, char *argv[])
   printf("port=%i syn_port=%i\n", port, this_addr.sin_port);
 
   sck = socket( AF_INET, SOCK_STREAM, IPPROTO_IP);
+  if(sck == -1) {
+    perror("socket creation failed:");
+    exit(1);
+  }
+
+  int optval;
+  socklen_t optlen = sizeof(optval);
+
+  optval = 1;
+  optlen = sizeof(optval);
+
+  if(setsockopt(sck, SOL_SOCKET, SO_REUSEADDR, &optval, optlen) < 0) {
+    perror("setsockopt(SO_REUSEADDR)");
+    exit(EXIT_FAILURE);
+  }
+
   if(bind( sck, (struct sockaddr *)&this_addr, addrlen ) != 0) {
     perror("socket bind failed:");
     exit(1);
@@ -355,9 +374,6 @@ main(int argc, char *argv[])
     perror("socket listen failed:");
     exit(1);
   }
-
-  /* kernel should automatically reap the child */
-  signal(SIGCHLD, SIG_IGN);
 
   printf("waiting connections\n");
   while( -1 != (client = accept( sck, (struct sockaddr *)&peer_addr, &addrlen ) ) ) {
@@ -385,11 +401,14 @@ main(int argc, char *argv[])
     exit(1);
   }
 
+  /*
   int optval;
   socklen_t optlen = sizeof(optval);
+  */
 
   optval = 1;
   optlen = sizeof(optval);
+
   if(setsockopt(client, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) < 0) {
     perror("setsockopt()");
     close(client);
