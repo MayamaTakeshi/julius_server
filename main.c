@@ -173,6 +173,7 @@ output_result(Recog *recog, void *dummy)
       for(i=0;i<seqnum;i++) {
          char *p = winfo->woutput[seq[i]];
          printf(" %s", p);
+         write(client, " ", 1);
          write(client, p, strlen(p));
       }
       write(client, "\n", 1);
