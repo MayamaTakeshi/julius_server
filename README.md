@@ -71,7 +71,7 @@ $ node test.js -b 10000 ../artifacts/ohayou_gozaimasu.4times.raw
 
 So we added support of adinnet:
 ```
-$ ./julius_server -C ../../dictation-kit/main.jconf -C ../../dictation-kit/am-gmm.jconf -plugindir . -input adinnet -adport 0 -cutsilence -nostrip
+$ ./julius_server -C ../../dictation-kit/main.jconf -C ../../dictation-kit/am-gmm.jconf -input adinnet -adport 0 -cutsilence -nostrip
 ```
 
 And this way, there was no problem:
