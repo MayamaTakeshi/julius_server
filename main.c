@@ -13,6 +13,10 @@
 
 #include <julius/juliuslib.h>
 
+int max_concurrent_sessions = 10;
+
+int ongoing_sessions = 0;
+
 int client = -1;
 
 void check_local_port() {
@@ -267,6 +271,11 @@ output_result(Recog *recog, void *dummy)
   fflush(stdout);
 }
 
+void proc_exit() {
+    ongoing_sessions--;
+    printf("ongoing_sessions=%i\n", ongoing_sessions);
+}
+
 /**
  * Main function
  * 
@@ -274,6 +283,13 @@ output_result(Recog *recog, void *dummy)
 int
 main(int argc, char *argv[])
 {
+  const char *s = getenv("MAX_CONCURRENT_SESSIONS");
+  if(s != NULL) {
+    max_concurrent_sessions = atoi(s); 
+  }
+
+  printf("max_concurrent_sessions=%i\n", max_concurrent_sessions);
+
   /**
    * configuration parameter holder
    * 
@@ -332,7 +348,7 @@ main(int argc, char *argv[])
   }
  
   /* kernel should automatically reap the child */
-  signal(SIGCHLD, SIG_IGN);
+  signal(SIGCHLD, proc_exit);
 
   int sck, addrlen;
   struct sockaddr_in this_addr, peer_addr;
@@ -347,7 +363,7 @@ main(int argc, char *argv[])
   this_addr.sin_addr.s_addr = htonl(INADDR_ANY);
   this_addr.sin_port        = htons(port);
 
-  printf("port=%i syn_port=%i\n", port, this_addr.sin_port);
+  printf("listening on port=%i\n", port);
 
   sck = socket( AF_INET, SOCK_STREAM, IPPROTO_IP);
   if(sck == -1) {
@@ -379,6 +395,13 @@ main(int argc, char *argv[])
   printf("waiting connections\n");
   while( -1 != (client = accept( sck, (struct sockaddr *)&peer_addr, &addrlen ) ) ) {
     printf("accepted connection\n");
+    if(ongoing_sessions >= max_concurrent_sessions) {
+      printf("ongoing_sessions=%i\n", ongoing_sessions);
+      printf("max_concurrent_sessions (%i) reached. Refusing request.\n", max_concurrent_sessions);
+      close(client);
+      continue; 
+    }
+
     child_pid = fork();
     if( child_pid < 0 ) {
       perror("Error forking");
@@ -392,6 +415,8 @@ main(int argc, char *argv[])
     } else {
       // in the parent
        close(client); 
+       ongoing_sessions++;
+       printf("ongoing_sessions=%i\n", ongoing_sessions);
     }
   }
 
