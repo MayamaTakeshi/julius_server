@@ -9,14 +9,39 @@
 #include <signal.h>
 #include <stdlib.h>
 
+#include <errno.h>
+
 #include <julius/juliuslib.h>
 
-int client = NULL;
+int client = -1;
+
+void check_local_port() {
+  struct sockaddr_in sin;
+  int addrlen = sizeof(sin);
+  if(getsockname(3, (struct sockaddr *)&sin, &addrlen) == 0 &&
+    sin.sin_family == AF_INET &&
+    addrlen == sizeof(sin))
+  {
+    int local_port = ntohs(sin.sin_port);
+    char buf[24];
+    sprintf(buf, "+AUDIO_PORT:%i\n", local_port);    
+    printf("local_port=%i\n", local_port);
+    write(client, buf, strlen(buf));
+  } else {
+    perror("getsockname failed:");
+    if(errno == EBADF) {
+      // OK: this means we are using fullduplex plugin instead of adinnet
+    } else {
+      // Unrecoverable error
+      exit(1); 
+    }
+  }
+}
 
 static void
 process_online(Recog *recog, void *dummy)
 {
-  //write(client, "+READY\n", 7); 
+  write(client, "+READY\n", 7); 
 }
 
 static void
@@ -314,20 +339,28 @@ main(int argc, char *argv[])
   memset( &this_addr, 0, addrlen );
   memset( &peer_addr, 0, addrlen );
 
-  this_addr.sin_port        = htons(port);
   this_addr.sin_family      = AF_INET;
   this_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  this_addr.sin_port        = htons(port);
+
+  printf("port=%i syn_port=%i\n", port, this_addr.sin_port);
 
   sck = socket( AF_INET, SOCK_STREAM, IPPROTO_IP);
-  bind( sck, &this_addr, addrlen );
+  if(bind( sck, (struct sockaddr *)&this_addr, addrlen ) != 0) {
+    perror("socket bind failed:");
+    exit(1);
+  }
 
-  listen( sck, 5 );
+  if(listen(sck, 5) != 0) {
+    perror("socket listen failed:");
+    exit(1);
+  }
 
   /* kernel should automatically reap the child */
   signal(SIGCHLD, SIG_IGN);
 
   printf("waiting connections\n");
-  while( -1 != (client = accept( sck, &peer_addr, &addrlen ) ) ) {
+  while( -1 != (client = accept( sck, (struct sockaddr *)&peer_addr, &addrlen ) ) ) {
     printf("accepted connection\n");
     child_pid = fork();
     if( child_pid < 0 ) {
@@ -336,7 +369,12 @@ main(int argc, char *argv[])
     }
 
     if( child_pid == 0 ) {
+      // in the child
+      close(sck);
       break;
+    } else {
+      // in the parent
+       close(client); 
     }
   }
 
@@ -379,6 +417,8 @@ main(int argc, char *argv[])
     return -1;
   }
 
+  check_local_port();
+
   /* output system information to log */
   j_recog_info(recog);
 
@@ -400,7 +440,7 @@ main(int argc, char *argv[])
     /* go on to the next input */
     continue;
       case -2:          /* end of recognition */
-    return;
+    return 0;
       }
       /* recognition loop */
       ret = j_recognize_stream(recog);
@@ -416,10 +456,10 @@ main(int argc, char *argv[])
       break;
     case -1:            /* error */
       fprintf(stderr, "error in input stream\n");
-      return;
+      return 0;
     case -2:            /* end of recognition process */
       fprintf(stderr, "failed to begin input stream\n");
-      return;
+      return 0;
     }
     
     /**********************/
