@@ -154,3 +154,9 @@ $ node test.js -b 50000 ../artifacts/ohayou_gozaimasu.4times.raw
 2021-06-10 14:52:34.226 : msg=+SPEECH_READY
 ```
 
+## Concurrent Session Limit
+You can control how many speech recognition session will be allowed by setting env var MAX_CONCURRENT_SESSIONS.
+Ex:
+```
+MAX_CONCURRENT_SESSIONS=5 ./julius_server -C ../../dictation-kit/main.jconf -C ../../dictation-kit/am-gmm.jconf -input adinnet -adport 0 -cutsilence -nostrip
+```
