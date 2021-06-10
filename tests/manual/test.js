@@ -4,12 +4,17 @@ const m = require('moment')
 
 var argv = require('yargs/yargs')(process.argv.slice(2))
     .usage(`
-Usage: $0 [-i server_ip_address] [-p server_port] [-loop] [-b buffer_size] raw_audio_file
+Usage: $0 [-i server_ip_address] [-p server_port] [-l] [-b buffer_size] raw_audio_file
 Ex:    $0 ../artifacts/ohayou_gozaimasu.4times.raw
 `)
     .default('i', 'localhost')
     .default('p', '10500')
     .default('b', '320')
+    .option('l', {
+      demand: false,
+      describe: 'indicates if we should loop sending data from the the audio file'
+    })
+    .boolean('l')
     .demandCommand(1)
     .argv
 
@@ -17,6 +22,7 @@ var host = argv.i
 var port = parseInt(argv.p)
 var buffer_size = parseInt(argv.b)
 var file = argv._[0]
+var loop = argv.l
 
 var client = new net.Socket()
 var audio_port_client = client
@@ -36,6 +42,47 @@ client.on('error', function (e) {
 })
 
 var acc = ""
+
+const start_audio_transmission = () => {
+    log(`starting audio transmission from ${file}`)
+    const fd = fs.openSync(file, "r")
+
+    const buffer = Buffer.alloc(buffer_size)
+
+    var tid = setInterval(() => {
+        fs.read(fd, buffer, 0, buffer_size, null, (err, bytesRead, data) => {
+            if(err) {
+                log(err)
+                process.exit(1)
+            } else if(bytesRead == 0) {
+                log("No more data from file.")
+                clearInterval(tid)
+
+                if(loop) {
+                    start_audio_transmission()
+                }
+            } else {
+                //log(`Fetched ${bytesRead} bytes from audio_file.`)
+                if(send_length_prefix) {
+                    var lenB = Buffer.alloc(4)
+                    lenB[0] = data.length & 0xff
+                    lenB[1] = (data.length >> 8) & 0xff
+                    lenB[2] = (data.length >> 16) & 0xff
+                    lenB[3] = (data.length >> 24) & 0xff
+                    audio_port_client.write(lenB)
+                }
+
+                for(var i=0 ;i<data.length/2 ; i++) {
+                    var temp = data[i*2]
+                    data[i*2] = data[i*2+1]
+                    data[i*2+1] = temp
+                }
+
+                audio_port_client.write(data)
+            }
+        })
+    }, 20)
+}
 
 client.on('data', function(data) {
     //log(`${new Date()} client data: ${data}`)
@@ -78,39 +125,7 @@ client.on('data', function(data) {
 
             send_length_prefix = true
         } else if(msg == '+READY') {
-            const fd = fs.openSync(file, "r")
-
-            const buffer = Buffer.alloc(buffer_size)
-
-            var tid = setInterval(() => {
-                fs.read(fd, buffer, 0, buffer_size, null, (err, bytesRead, data) => {
-                    if(err) {
-                        log(err)
-                        process.exit(1)
-                    } else if(bytesRead == 0) {
-                        log("No more data from file.")
-                        clearInterval(tid)
-                    } else {
-                        //log(`Fetched ${bytesRead} bytes from audio_file.`)
-                        if(send_length_prefix) {
-                            var lenB = Buffer.alloc(4)
-                            lenB[0] = data.length & 0xff
-                            lenB[1] = (data.length >> 8) & 0xff
-                            lenB[2] = (data.length >> 16) & 0xff
-                            lenB[3] = (data.length >> 24) & 0xff
-                            audio_port_client.write(lenB)
-                        }
-
-                        for(var i=0 ;i<data.length/2 ; i++) {
-                            var temp = data[i*2]
-                            data[i*2] = data[i*2+1]
-                            data[i*2+1] = temp
-                        }
-
-                        audio_port_client.write(data)
-                    }
-                })
-            }, 20)
+            start_audio_transmission()
         }
 
         pos = acc.indexOf("\n")
