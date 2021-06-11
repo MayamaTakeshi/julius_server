@@ -82,7 +82,17 @@ recognition_end(Recog *recog, void *dummy)
   printf("recognition_end\n");
 }
 
+int poll_count = 0;
 
+static void
+process_poll(Recog *recog, void *dummy)
+{
+    poll_count++;
+    if(poll_count > 500) {
+        write(client, "+POLL\n", 6); 
+        poll_count = 0;
+    }
+}
 
 /* Sub function to output phoneme sequence. */
 static void
@@ -454,6 +464,7 @@ main(int argc, char *argv[])
   callback_add(recog, CALLBACK_EVENT_RECOGNITION_BEGIN, recognition_begin, NULL);
   callback_add(recog, CALLBACK_EVENT_RECOGNITION_END, recognition_end, NULL);
   callback_add(recog, CALLBACK_RESULT, output_result, NULL);
+  callback_add(recog, CALLBACK_POLL, process_poll, NULL);
 
   /**************************/
   /* Initialize audio input */

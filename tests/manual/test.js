@@ -26,6 +26,8 @@ var buffer_size = parseInt(argv.b)
 var file = argv._[0]
 var loop = argv.l
 
+var tid = null
+
 const log = msg => {
     console.log(`${m().format("YYYY-MM-DD HH:mm:ss.SSS")} : ${msg}`)
 }
@@ -45,13 +47,29 @@ srs.on('ready', () => {
     start_audio_transmission()
 })
 
+srs.on('error', err => {
+    log(`error: ${err}`)
+    if(tid) {
+        clearInterval(tid)
+        tid = null
+    }
+})
+
+srs.on('close', err => {
+    log('close')
+    if(tid) {
+        clearInterval(tid)
+        tid = null
+    }
+})
+
 const start_audio_transmission = () => {
     log(`starting audio transmission from ${file}`)
     const fd = fs.openSync(file, "r")
 
     const buffer = Buffer.alloc(buffer_size)
 
-    var tid = setInterval(() => {
+    tid = setInterval(() => {
         fs.read(fd, buffer, 0, buffer_size, null, (err, bytesRead, data) => {
             if(err) {
                 log(err)
@@ -59,6 +77,7 @@ const start_audio_transmission = () => {
             } else if(bytesRead == 0) {
                 log("No more data from file.")
                 clearInterval(tid)
+                tid = null
 
                 if(loop) {
                     start_audio_transmission()
