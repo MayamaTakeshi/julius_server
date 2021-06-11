@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include <errno.h>
+#include<sys/wait.h>
 
 #include <julius/juliuslib.h>
 
@@ -272,6 +273,7 @@ output_result(Recog *recog, void *dummy)
 }
 
 void proc_exit() {
+    wait(NULL);
     ongoing_sessions--;
     printf("ongoing_sessions=%i\n", ongoing_sessions);
 }
