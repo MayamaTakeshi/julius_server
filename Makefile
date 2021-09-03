@@ -1,5 +1,7 @@
 LIBSENT=/usr/local/src/git/julius/libsent
-LIBJULIUS=/usr/local/src/git/julius/libjulius
+JULIUS_ROOT=/usr/local/src/git/julius
+
+LIBJULIUS=$(JULIUS_ROOT)/libjulius
 
 CC=gcc
 CFLAGS=-g -O2 
@@ -24,7 +26,7 @@ julius_server: main.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o julius_server main.c $(LDFLAGS)
 
 fullduplex_plugin.jpi: fullduplex_plugin.c
-	gcc -shared -o fullduplex_plugin.jpi fullduplex_plugin.c -I ../../julius/plugin/
+	gcc -shared -o fullduplex_plugin.jpi fullduplex_plugin.c -I $(JULIUS_ROOT)/plugin/
 
 clean:
 	$(RM) *.o *.bak *~ core TAGS

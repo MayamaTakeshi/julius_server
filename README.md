@@ -13,6 +13,11 @@ Obs:
 ## Installation
 
 You should install julius and acoustic models.
+In case you want to test with Japanese and if you are using Debian 10 and is root, this should work:
+```
+./install_julius_and_japanese_dictation_kit.sh
+```
+
 Then build the app by doing (you might need to adjust the Makefile with the location of julius if you build it from source)
 ```
 make
@@ -21,7 +26,7 @@ make
 ## Details
 We originally implemented a plugin to permit to connect using a single socket to the server:
 ```
-$ ./julius_server -C ../../dictation-kit/main.jconf -C ../../dictation-kit/am-gmm.jconf -plugindir . -input fullduplex -cutsilence -nostrip 
+$ ./julius_server -C /usr/local/src/git/dictation-kit/main.jconf -C /usr/local/src/git/dictation-kit/am-gmm.jconf -plugindir . -input fullduplex -cutsilence -nostrip 
 
 ```
 This seemed to work OK:
@@ -71,7 +76,7 @@ $ node test.js -b 10000 ../artifacts/ohayou_gozaimasu.4times.raw
 
 So we added support of adinnet:
 ```
-$ ./julius_server -C ../../dictation-kit/main.jconf -C ../../dictation-kit/am-gmm.jconf -input adinnet -adport 0 -cutsilence -nostrip
+$ ./julius_server -C /usr/local/src/git/dictation-kit/main.jconf -C /usr/local/src/git/dictation-kit/am-gmm.jconf -input adinnet -adport 0 -cutsilence -nostrip
 ```
 
 And this way, there was no problem:
@@ -158,5 +163,5 @@ $ node test.js -b 50000 ../artifacts/ohayou_gozaimasu.4times.raw
 You can control how many speech recognition session will be allowed by setting env var MAX_CONCURRENT_SESSIONS.
 Ex:
 ```
-MAX_CONCURRENT_SESSIONS=5 ./julius_server -C ../../dictation-kit/main.jconf -C ../../dictation-kit/am-gmm.jconf -input adinnet -adport 0 -cutsilence -nostrip
+MAX_CONCURRENT_SESSIONS=5 ./julius_server -C /usr/local/src/git/dictation-kit/main.jconf -C /usr/local/src/git//dictation-kit/am-gmm.jconf -input adinnet -adport 0 -cutsilence -nostrip
 ```
