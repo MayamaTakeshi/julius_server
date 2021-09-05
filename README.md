@@ -165,3 +165,11 @@ Ex:
 ```
 MAX_CONCURRENT_SESSIONS=5 ./julius_server -C /usr/local/src/git/dictation-kit/main.jconf -C /usr/local/src/git//dictation-kit/am-gmm.jconf -input adinnet -adport 0 -cutsilence -nostrip
 ```
+
+
+## Better performace
+We got better results by using the server this way:
+```
+./julius_server -C /usr/local/src/git/dictation-kit/main.jconf -C /usr/local/src/git/dictation-kit/am-dnn.jconf -dnnconf /usr/local/src/git/dictation-kit/julius.dnnconf -input adinnet -adport 0 -cutsilence -nostrip
+```
+
