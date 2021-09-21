@@ -13,7 +13,7 @@ Obs:
 ## Installation
 
 You should install julius and acoustic models.
-In case you want to test with Japanese and if you are using Debian 10 and is root, this should work:
+In case you want to test with Japanese and if you are using Debian 10 and are root, this should work:
 ```
 ./install_julius_and_japanese_dictation_kit.sh
 ```
